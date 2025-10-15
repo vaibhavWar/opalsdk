@@ -1,6 +1,6 @@
 # Cloudflare Workers configuration for Product Description Generator
 
-name = "product-description-generator"
+name = "opalsdk"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
