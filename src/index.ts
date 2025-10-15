@@ -57,7 +57,7 @@ interface ProductDescriptionResult {
 class ProductDescriptionGeneratorTool implements OpalTool {
   // Tool metadata (following Opal SDK pattern)
   readonly name = 'product-description-generator';
-  readonly description = 'Generates natural, AI-like product descriptions (up to 500 characters) dynamically based on any product attributes.';
+  readonly description = 'Generates natural, AI-like product descriptions dynamically based on any product attributes.';
   readonly version = '1.0.0';
 
   /**
@@ -219,11 +219,6 @@ class ProductDescriptionGeneratorTool implements OpalTool {
       description += `Backed by ${warrantySimple} warranty. `;
     } else {
       description += 'Designed for demanding applications. ';
-    }
-    
-    // Ensure it stays under 500 characters
-    if (description.length > 500) {
-      description = description.substring(0, 497) + '...';
     }
     
     return description.trim();

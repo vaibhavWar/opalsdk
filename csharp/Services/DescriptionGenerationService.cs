@@ -5,7 +5,6 @@ namespace ProductDescriptionGenerator.Services;
 /// </summary>
 public class DescriptionGenerationService : IDescriptionGenerationService
 {
-    private const int MaxDescriptionLength = 500;
     private static readonly string[] PriorityKeys = { "capacity", "cartridge type", "weight", "dimensions", "material" };
 
     public string GenerateProductDescription(string productName, string partNumber, List<string> attributes)
@@ -14,7 +13,7 @@ public class DescriptionGenerationService : IDescriptionGenerationService
         
         var description = BuildDescription(productName, partNumber, attrMap, attrList);
         
-        return TrimToMaxLength(description);
+        return description;
     }
 
     private static (Dictionary<string, string> attrMap, List<(string key, string value, string original)> attrList) 
@@ -139,15 +138,6 @@ public class DescriptionGenerationService : IDescriptionGenerationService
             return $"Backed by {warrantySimple} warranty. ";
         }
         return "Designed for demanding applications. ";
-    }
-
-    private static string TrimToMaxLength(string description)
-    {
-        if (description.Length > MaxDescriptionLength)
-        {
-            return description.Substring(0, MaxDescriptionLength - 3) + "...";
-        }
-        return description;
     }
 }
 

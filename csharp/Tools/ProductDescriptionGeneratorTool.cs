@@ -19,7 +19,7 @@ public class ProductDescriptionGeneratorTool
     }
 
     [OpalTool(Name = "product-description-generator")]
-    [Description("Generates natural, AI-like product descriptions (up to 500 characters) dynamically based on any product attributes")]
+    [Description("Generates natural, AI-like product descriptions dynamically based on any product attributes")]
     public object GenerateDescription(ProductDescriptionParameters parameters)
     {
         // Validate parameters
