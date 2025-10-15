@@ -45,7 +45,7 @@ app.UseCors();
 var toolMetadata = new
 {
     name = "product-description-generator",
-    description = "Provides structured product information for Optimizely Opal AI to generate natural product descriptions up to 500 characters.",
+    description = "Generates natural, AI-like product descriptions (up to 500 characters) dynamically based on any product attributes.",
     version = "1.0.0",
     sdkPattern = "optimizely-opal-tools-sdk"
 };
@@ -222,12 +222,79 @@ static string GenerateProductDescription(
     string partNumber, 
     List<string> attributes)
 {
-    // Return structured product information for Opal to generate description
-    // Format: Product name, part number, and all attributes in a clean format
-    var description = $"{productName}, Part# {partNumber}. ";
+    // Parse attributes into a map for easier access
+    var attrMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    var attrList = new List<(string key, string value, string original)>();
     
-    // Add all attributes in a natural list format
-    description += $"Key specifications: {string.Join(", ", attributes)}.";
+    foreach (var attr in attributes)
+    {
+        var colonIndex = attr.IndexOf(':');
+        if (colonIndex > 0)
+        {
+            var key = attr.Substring(0, colonIndex).Trim().ToLower();
+            var value = attr.Substring(colonIndex + 1).Trim();
+            attrMap[key] = value;
+            attrList.Add((key, value, attr));
+        }
+        else
+        {
+            attrList.Add((attr.ToLower(), attr, attr));
+        }
+    }
+
+    // Start with engaging introduction
+    var description = $"The {productName} (Part# {partNumber}) ";
+    
+    // Add opening statement - check for power/voltage/cordless to make it dynamic
+    var hasPower = attrMap.ContainsKey("battery voltage (v)") || 
+                   attrMap.ContainsKey("voltage") || 
+                   attrMap.ContainsKey("power");
+    var isCordless = attrMap.TryGetValue("cordless / corded", out var cordlessValue) && 
+                     cordlessValue.ToLower() == "cordless";
+    
+    if (hasPower && isCordless)
+    {
+        description += "delivers powerful cordless performance. ";
+    }
+    else if (hasPower)
+    {
+        description += "offers reliable powered performance. ";
+    }
+    else
+    {
+        description += "provides professional-grade quality. ";
+    }
+    
+    // Build feature highlights from first few meaningful attributes
+    var meaningfulAttrs = attrList
+        .Where(a => !a.key.Contains("cs_") && 
+                    a.value.ToLower() != "yes" && 
+                    a.value.ToLower() != "no")
+        .Take(3)
+        .ToList();
+    
+    if (meaningfulAttrs.Any())
+    {
+        var features = string.Join(", ", meaningfulAttrs.Select(a => a.value));
+        description += $"Features include {features}. ";
+    }
+    
+    // Add brand statement if available
+    if (attrMap.TryGetValue("brand", out var brand))
+    {
+        description += $"Built with {brand} quality and reliability. ";
+    }
+    
+    // Add warranty if available
+    if (attrMap.TryGetValue("cs_manufacturer_warranty", out var warranty))
+    {
+        var warrantySimple = warranty.Replace(" limited warranty", "").Split('/')[0];
+        description += $"Backed by {warrantySimple} warranty. ";
+    }
+    else
+    {
+        description += "Designed for demanding applications. ";
+    }
     
     // Ensure it stays under 500 characters
     if (description.Length > 500)
@@ -235,7 +302,7 @@ static string GenerateProductDescription(
         description = description.Substring(0, 497) + "...";
     }
     
-    return description;
+    return description.Trim();
 }
 
 // ============================================================================

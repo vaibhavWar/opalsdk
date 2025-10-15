@@ -57,7 +57,7 @@ interface ProductDescriptionResult {
 class ProductDescriptionGeneratorTool implements OpalTool {
   // Tool metadata (following Opal SDK pattern)
   readonly name = 'product-description-generator';
-  readonly description = 'Provides structured product information for Optimizely Opal AI to generate natural product descriptions up to 500 characters.';
+  readonly description = 'Generates natural, AI-like product descriptions (up to 500 characters) dynamically based on any product attributes.';
   readonly version = '1.0.0';
 
   /**
@@ -134,8 +134,8 @@ class ProductDescriptionGeneratorTool implements OpalTool {
   }
 
   /**
-   * Generate product description with attributes for Opal to process
-   * Returns structured data that Opal's AI will use to create natural description
+   * Generate natural, AI-like product description dynamically
+   * Works with any attributes - no hardcoding
    * @private
    */
   private generateDescription(
@@ -143,19 +143,70 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     partNumber: string,
     attributes: string[]
   ): string {
-    // Return structured product information for Opal to generate description
-    // Format: Product name, part number, and all attributes in a clean format
-    let description = `${productName}, Part# ${partNumber}. `;
+    // Parse attributes into a map for easier access
+    const attrMap = new Map<string, string>();
+    const attrList: Array<{ key: string; value: string; original: string }> = [];
     
-    // Add all attributes in a natural list format
-    description += `Key specifications: ${attributes.join(', ')}.`;
+    attributes.forEach(attr => {
+      const colonIndex = attr.indexOf(':');
+      if (colonIndex > 0) {
+        const key = attr.substring(0, colonIndex).trim().toLowerCase();
+        const value = attr.substring(colonIndex + 1).trim();
+        attrMap.set(key, value);
+        attrList.push({ key, value, original: attr });
+      } else {
+        attrList.push({ key: attr.toLowerCase(), value: attr, original: attr });
+      }
+    });
+
+    // Start with engaging introduction
+    let description = `The ${productName} (Part# ${partNumber}) `;
+    
+    // Add opening statement - check for power/voltage/cordless to make it dynamic
+    const hasPower = attrMap.has('battery voltage (v)') || attrMap.has('voltage') || attrMap.has('power');
+    const isCordless = attrMap.get('cordless / corded')?.toLowerCase() === 'cordless';
+    
+    if (hasPower && isCordless) {
+      description += 'delivers powerful cordless performance. ';
+    } else if (hasPower) {
+      description += 'offers reliable powered performance. ';
+    } else {
+      description += 'provides professional-grade quality. ';
+    }
+    
+    // Build feature highlights from first few meaningful attributes
+    const meaningfulAttrs = attrList.filter(a => 
+      !a.key.includes('cs_') && 
+      a.value.toLowerCase() !== 'yes' && 
+      a.value.toLowerCase() !== 'no'
+    ).slice(0, 3);
+    
+    if (meaningfulAttrs.length > 0) {
+      const features = meaningfulAttrs.map(a => a.value).join(', ');
+      description += `Features include ${features}. `;
+    }
+    
+    // Add brand statement if available
+    const brand = attrMap.get('brand');
+    if (brand) {
+      description += `Built with ${brand} quality and reliability. `;
+    }
+    
+    // Add warranty if available
+    const warranty = attrMap.get('cs_manufacturer_warranty');
+    if (warranty) {
+      const warrantySimple = warranty.replace(' limited warranty', '').split('/')[0];
+      description += `Backed by ${warrantySimple} warranty. `;
+    } else {
+      description += 'Designed for demanding applications. ';
+    }
     
     // Ensure it stays under 500 characters
     if (description.length > 500) {
       description = description.substring(0, 497) + '...';
     }
     
-    return description;
+    return description.trim();
   }
 }
 
