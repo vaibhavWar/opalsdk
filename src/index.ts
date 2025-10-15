@@ -57,7 +57,7 @@ interface ProductDescriptionResult {
 class ProductDescriptionGeneratorTool implements OpalTool {
   // Tool metadata (following Opal SDK pattern)
   readonly name = 'product-description-generator';
-  readonly description = 'Generates concise 500-character product descriptions based on product name, part number, and attributes.';
+  readonly description = 'Provides structured product information for Optimizely Opal AI to generate natural product descriptions up to 500 characters.';
   readonly version = '1.0.0';
 
   /**
@@ -134,7 +134,8 @@ class ProductDescriptionGeneratorTool implements OpalTool {
   }
 
   /**
-   * Generate natural, AI-like product description (~500 characters)
+   * Generate product description with attributes for Opal to process
+   * Returns structured data that Opal's AI will use to create natural description
    * @private
    */
   private generateDescription(
@@ -142,79 +143,12 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     partNumber: string,
     attributes: string[]
   ): string {
-    // Parse attributes into key-value pairs
-    const attrMap = new Map<string, string>();
-    attributes.forEach(attr => {
-      const parts = attr.split(':');
-      if (parts.length === 2) {
-        attrMap.set(parts[0].trim().toLowerCase(), parts[1].trim());
-      }
-    });
-
-    // Start with product name and part number
-    let description = `The ${productName} (Part# ${partNumber}) `;
+    // Return structured product information for Opal to generate description
+    // Format: Product name, part number, and all attributes in a clean format
+    let description = `${productName}, Part# ${partNumber}. `;
     
-    // Add dynamic opening based on product type or key features
-    const brand = attrMap.get('brand');
-    const voltage = attrMap.get('battery voltage (v)');
-    const capacity = attrMap.get('capacity');
-    const cordless = attrMap.get('cordless / corded');
-    
-    // Build natural sentences based on available attributes
-    if (voltage && (cordless?.toLowerCase() === 'cordless')) {
-      description += `delivers powerful, precise performance with its ${voltage}V battery system. `;
-    } else {
-      description += `offers professional-grade performance and reliability. `;
-    }
-    
-    // Add key features naturally
-    const features: string[] = [];
-    
-    if (capacity) {
-      features.push(`${capacity} capacity`);
-    }
-    
-    const cartridgeType = attrMap.get('cartridge type');
-    if (cartridgeType) {
-      features.push(`compatible with ${cartridgeType} cartridges`);
-    }
-    
-    const chargerIncluded = attrMap.get('charger included');
-    if (chargerIncluded?.toLowerCase() === 'yes') {
-      features.push('includes charger for convenience');
-    }
-    
-    if (features.length > 0) {
-      description += `This ${cordless?.toLowerCase() || 'tool'} features ${features.slice(0, 2).join(', ')}`;
-      if (features.length > 2) {
-        description += `, and ${features[2]}`;
-      }
-      description += '. ';
-    }
-    
-    // Add design/brand statement if available
-    const color = attrMap.get('cs_color');
-    if (brand && color) {
-      description += `Featuring ${brand}'s signature ${color} design, it's built for professional use. `;
-    } else if (brand) {
-      description += `Built with ${brand} quality for professional applications. `;
-    }
-    
-    // Add warranty information if available
-    const warranty = attrMap.get('cs_manufacturer_warranty');
-    if (warranty) {
-      const warrantyShort = warranty.replace(' limited warranty', '').replace(' year', '-year');
-      description += `Backed by ${warrantyShort.split('/')[0]} warranty`;
-      if (warranty.includes('service')) {
-        description += ', 1-year free service';
-      }
-      if (warranty.includes('money back')) {
-        description += ', and 90-day money-back guarantee';
-      }
-      description += '.';
-    } else {
-      description += `Designed for demanding professional applications.`;
-    }
+    // Add all attributes in a natural list format
+    description += `Key specifications: ${attributes.join(', ')}.`;
     
     // Ensure it stays under 500 characters
     if (description.length > 500) {
