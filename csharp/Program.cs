@@ -45,7 +45,7 @@ app.UseCors();
 var toolMetadata = new
 {
     name = "product-description-generator",
-    description = "Generates comprehensive, marketing-ready product descriptions based on product name, part number, and attributes. Creates structured content with overview, features, specifications, and applications.",
+    description = "Generates concise 500-character product descriptions based on product name, part number, and attributes.",
     version = "1.0.0",
     sdkPattern = "optimizely-opal-tools-sdk"
 };
@@ -210,141 +210,35 @@ static string GenerateProductDescription(
     string partNumber, 
     List<string> attributes)
 {
-    var sb = new StringBuilder();
-
-    // Header
-    sb.AppendLine("# Product Description");
-    sb.AppendLine();
-    sb.AppendLine($"## {productName}");
-    sb.AppendLine();
-    sb.AppendLine($"**Part Number:** `{partNumber}`\n");
-    sb.AppendLine("---\n");
-
-    // Overview
-    sb.AppendLine("## Overview\n");
-    sb.AppendLine(GenerateOverview(productName, attributes));
-    sb.AppendLine();
-
-    // Key Features
-    sb.AppendLine("## Key Features\n");
-    sb.AppendLine(GenerateKeyFeatures(productName, attributes));
-    sb.AppendLine();
-
-    // Technical Specifications
-    sb.AppendLine("## Technical Specifications\n");
-    sb.AppendLine($"**Product Name:** {productName}  ");
-    sb.AppendLine($"**Part Number:** {partNumber}\n");
-
-    // Product Attributes
-    sb.AppendLine("## Product Attributes\n");
+    // Build concise description
+    var description = $"{productName} (Part #: {partNumber}) - ";
+    
+    // Add key selling point
+    description += "A premium quality product designed for exceptional performance and reliability. ";
+    
+    // Add attributes if provided
     if (attributes.Any())
     {
-        foreach (var attr in attributes)
+        var attributesToShow = attributes.Take(3).ToList();
+        description += $"Features include: {string.Join(", ", attributesToShow)}";
+        
+        if (attributes.Count > 3)
         {
-            sb.AppendLine($"- {attr}");
+            description += $", and {attributes.Count - 3} more";
         }
-    }
-    else
-    {
-        sb.AppendLine("- No additional attributes specified");
-    }
-    sb.AppendLine("\n---\n");
-
-    // Why Choose
-    sb.AppendLine("## Why Choose This Product?\n");
-    sb.AppendLine(GenerateWhyChoose(productName, attributes));
-    sb.AppendLine();
-
-    // Applications
-    sb.AppendLine("## Product Applications\n");
-    sb.AppendLine(GenerateApplications(attributes));
-    sb.AppendLine("\n---\n");
-
-    // Footer
-    sb.AppendLine($"*Generated product description for {productName} (Part #: {partNumber})*");
-
-    return sb.ToString();
-}
-
-static string GenerateOverview(string productName, List<string> attributes)
-{
-    var overview = $"The **{productName}** is a premium product designed to deliver exceptional performance and reliability. ";
-    
-    if (attributes.Any())
-    {
-        overview += $"This product features {attributes.Count} key attribute{(attributes.Count > 1 ? "s" : "")} that make it stand out in its category. ";
+        description += ". ";
     }
     
-    overview += $"Engineered with precision and built to last, the {productName} represents the perfect balance of quality, functionality, and value.";
+    // Add closing statement
+    description += "Engineered with precision and built to last, offering the perfect balance of quality, functionality, and value for professional use.";
     
-    return overview;
-}
-
-static string GenerateKeyFeatures(string productName, List<string> attributes)
-{
-    var features = new List<string>();
-    
-    // Add attribute-based features
-    if (attributes.Any())
+    // Trim to approximately 500 characters
+    if (description.Length > 500)
     {
-        for (int i = 0; i < attributes.Count; i++)
-        {
-            features.Add($"{i + 1}. **{attributes[i]}** - Carefully selected to enhance product performance");
-        }
-    }
-    else
-    {
-        // Default features when no attributes provided
-        features.Add("1. **High Quality Construction** - Built to last with premium materials");
-        features.Add("2. **Reliable Performance** - Consistent results you can count on");
-        features.Add("3. **Easy Integration** - Seamlessly fits into your workflow");
+        description = description.Substring(0, 497) + "...";
     }
     
-    // Add standard features
-    features.Add($"{features.Count + 1}. **Quality Assurance** - Every {productName} undergoes rigorous testing");
-    features.Add($"{features.Count + 1}. **Customer Support** - Backed by comprehensive warranty and support");
-    
-    return string.Join("\n", features);
-}
-
-static string GenerateWhyChoose(string productName, List<string> attributes)
-{
-    var reasons = new List<string>
-    {
-        $"The **{productName}** has been carefully designed to meet the highest standards of quality and performance.",
-        "",
-        "**Benefits include:**",
-        "- Superior quality and durability",
-        "- Competitive pricing and value",
-        "- Trusted by professionals worldwide",
-        "- Comprehensive documentation and support"
-    };
-    
-    if (attributes.Count > 3)
-    {
-        reasons.Add("- Extensive feature set with multiple configuration options");
-    }
-    
-    return string.Join("\n", reasons);
-}
-
-static string GenerateApplications(List<string> attributes)
-{
-    var applications = new List<string>
-    {
-        "This product is ideal for:",
-        "- Commercial applications",
-        "- Industrial settings",
-        "- Professional use cases",
-        "- Integration with existing systems",
-        ""
-    };
-
-    applications.Add(attributes.Any()
-        ? $"With its {attributes.Count} specialized attributes, this product adapts to various use cases and requirements."
-        : "Versatile design allows for use across multiple industries and applications.");
-
-    return string.Join("\n", applications);
+    return description;
 }
 
 // ============================================================================

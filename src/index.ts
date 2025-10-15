@@ -57,7 +57,7 @@ interface ProductDescriptionResult {
 class ProductDescriptionGeneratorTool implements OpalTool {
   // Tool metadata (following Opal SDK pattern)
   readonly name = 'product-description-generator';
-  readonly description = 'Generates comprehensive, marketing-ready product descriptions based on product name, part number, and attributes. Creates structured content with overview, features, specifications, and applications.';
+  readonly description = 'Generates concise 500-character product descriptions based on product name, part number, and attributes.';
   readonly version = '1.0.0';
 
   /**
@@ -130,7 +130,7 @@ class ProductDescriptionGeneratorTool implements OpalTool {
   }
 
   /**
-   * Generate comprehensive product description with markdown formatting
+   * Generate concise 500-character product description
    * @private
    */
   private generateDescription(
@@ -138,138 +138,30 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     partNumber: string,
     attributes: string[]
   ): string {
-    const sections: string[] = [];
-
-    // Header
-    sections.push('# Product Description');
-    sections.push('');
-    sections.push(`## ${productName}`);
-    sections.push('');
-    sections.push(`**Part Number:** \`${partNumber}\`\n`);
-    sections.push('---\n');
-
-    // Overview
-    sections.push('## Overview\n');
-    sections.push(this.generateOverview(productName, attributes));
-    sections.push('');
-
-    // Key Features
-    sections.push('## Key Features\n');
-    sections.push(this.generateKeyFeatures(productName, attributes));
-    sections.push('');
-
-    // Technical Specifications
-    sections.push('## Technical Specifications\n');
-    sections.push(`**Product Name:** ${productName}  `);
-    sections.push(`**Part Number:** ${partNumber}\n`);
-
-    // Product Attributes
-    sections.push('## Product Attributes\n');
+    // Build concise description
+    let description = `${productName} (Part #: ${partNumber}) - `;
+    
+    // Add key selling point
+    description += `A premium quality product designed for exceptional performance and reliability. `;
+    
+    // Add attributes if provided
     if (attributes.length > 0) {
-      attributes.forEach(attr => sections.push(`- ${attr}`));
-    } else {
-      sections.push('- No additional attributes specified');
-    }
-    sections.push('\n---\n');
-
-    // Benefits
-    sections.push('## Why Choose This Product?\n');
-    sections.push(this.generateBenefits(productName, attributes));
-    sections.push('');
-
-    // Applications
-    sections.push('## Product Applications\n');
-    sections.push(this.generateApplications(attributes));
-    sections.push('\n---\n');
-
-    // Footer
-    sections.push(`*Generated product description for ${productName} (Part #: ${partNumber})*`);
-
-    return sections.join('\n');
-  }
-
-  /**
-   * Generate product overview section
-   * @private
-   */
-  private generateOverview(productName: string, attributes: string[]): string {
-    let overview = `The **${productName}** is a premium product designed to deliver exceptional performance and reliability. `;
-    
-    if (attributes.length > 0) {
-      overview += `This product features ${attributes.length} key attribute${attributes.length > 1 ? 's' : ''} that make it stand out in its category. `;
+      description += `Features include: ${attributes.slice(0, 3).join(', ')}`;
+      if (attributes.length > 3) {
+        description += `, and ${attributes.length - 3} more`;
+      }
+      description += `. `;
     }
     
-    overview += `Engineered with precision and built to last, the ${productName} represents the perfect balance of quality, functionality, and value.`;
+    // Add closing statement
+    description += `Engineered with precision and built to last, offering the perfect balance of quality, functionality, and value for professional use.`;
     
-    return overview;
-  }
-
-  /**
-   * Generate key features section
-   * @private
-   */
-  private generateKeyFeatures(productName: string, attributes: string[]): string {
-    const features: string[] = [];
-    
-    if (attributes.length > 0) {
-      attributes.forEach((attr, index) => {
-        features.push(`${index + 1}. **${attr}** - Carefully selected to enhance product performance`);
-      });
-    } else {
-      features.push('1. **High Quality Construction** - Built to last with premium materials');
-      features.push('2. **Reliable Performance** - Consistent results you can count on');
-      features.push('3. **Easy Integration** - Seamlessly fits into your workflow');
+    // Trim to approximately 500 characters
+    if (description.length > 500) {
+      description = description.substring(0, 497) + '...';
     }
     
-    features.push(`${features.length + 1}. **Quality Assurance** - Every ${productName} undergoes rigorous testing`);
-    features.push(`${features.length + 1}. **Customer Support** - Backed by comprehensive warranty and support`);
-    
-    return features.join('\n');
-  }
-
-  /**
-   * Generate benefits section
-   * @private
-   */
-  private generateBenefits(productName: string, attributes: string[]): string {
-    const benefits = [
-      `The **${productName}** has been carefully designed to meet the highest standards of quality and performance.`,
-      '',
-      '**Benefits include:**',
-      '- Superior quality and durability',
-      '- Competitive pricing and value',
-      '- Trusted by professionals worldwide',
-      '- Comprehensive documentation and support'
-    ];
-    
-    if (attributes.length > 3) {
-      benefits.push('- Extensive feature set with multiple configuration options');
-    }
-    
-    return benefits.join('\n');
-  }
-
-  /**
-   * Generate applications section
-   * @private
-   */
-  private generateApplications(attributes: string[]): string {
-    const applications = [
-      'This product is ideal for:',
-      '- Commercial applications',
-      '- Industrial settings',
-      '- Professional use cases',
-      '- Integration with existing systems',
-      ''
-    ];
-
-    applications.push(
-      attributes.length > 0
-        ? `With its ${attributes.length} specialized attributes, this product adapts to various use cases and requirements.`
-        : 'Versatile design allows for use across multiple industries and applications.'
-    );
-
-    return applications.join('\n');
+    return description;
   }
 }
 
