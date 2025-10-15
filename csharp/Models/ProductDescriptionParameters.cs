@@ -19,5 +19,11 @@ public class ProductDescriptionParameters
     [Required]
     [Description("List of product attributes, features, or specifications (e.g., ['Brand: DEWALT', 'Voltage: 20V', 'Capacity: 28 oz.'])")]
     public List<string> Attributes { get; set; } = new List<string>();
+
+    [Description("The type or category of content (e.g., 'ecommerce', 'technical', 'marketing')")]
+    public string? Type { get; set; }
+
+    [Description("The tone of the description (e.g., 'professional', 'casual', 'enthusiastic')")]
+    public string? Tone { get; set; }
 }
 

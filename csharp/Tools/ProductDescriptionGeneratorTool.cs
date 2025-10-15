@@ -25,11 +25,17 @@ public class ProductDescriptionGeneratorTool
         // Validate parameters
         ValidateParameters(parameters);
 
+        // Set defaults for optional parameters
+        var type = string.IsNullOrWhiteSpace(parameters.Type) ? "general" : parameters.Type;
+        var tone = string.IsNullOrWhiteSpace(parameters.Tone) ? "professional" : parameters.Tone;
+
         // Generate the description
         var description = _descriptionService.GenerateProductDescription(
             parameters.ProductName,
             parameters.PartNumber,
-            parameters.Attributes
+            parameters.Attributes,
+            type,
+            tone
         );
 
         // Return result with metadata
@@ -38,7 +44,9 @@ public class ProductDescriptionGeneratorTool
             content = description,
             productName = parameters.ProductName,
             partNumber = parameters.PartNumber,
-            attributeCount = parameters.Attributes.Count
+            attributeCount = parameters.Attributes.Count,
+            type = type,
+            tone = tone
         };
     }
 

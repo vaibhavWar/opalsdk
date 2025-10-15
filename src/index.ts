@@ -40,6 +40,8 @@ interface ProductDescriptionParams {
   productName: string;
   partNumber: string;
   attributes: string[];
+  type?: string;
+  tone?: string;
 }
 
 interface ProductDescriptionResult {
@@ -47,6 +49,8 @@ interface ProductDescriptionResult {
   productName: string;
   partNumber: string;
   attributeCount: number;
+  type: string;
+  tone: string;
 }
 
 /**
@@ -93,6 +97,20 @@ class ProductDescriptionGeneratorTool implements OpalTool {
           items: {
             type: 'string'
           }
+        },
+        {
+          name: 'type',
+          type: 'string',
+          description: 'The type or category of content (e.g., "ecommerce", "technical", "marketing")',
+          required: false,
+          example: 'ecommerce'
+        },
+        {
+          name: 'tone',
+          type: 'string',
+          description: 'The tone of the description (e.g., "professional", "casual", "enthusiastic")',
+          required: false,
+          example: 'professional'
         }
       ]
     };
@@ -117,19 +135,25 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     }
 
     const attributes = params.attributes;
+    const type = params.type || 'general';
+    const tone = params.tone || 'professional';
 
     // Generate the product description
     const description = this.generateDescription(
       params.productName,
       params.partNumber,
-      attributes
+      attributes,
+      type,
+      tone
     );
 
     return {
       content: description,
       productName: params.productName,
       partNumber: params.partNumber,
-      attributeCount: attributes.length
+      attributeCount: attributes.length,
+      type: type,
+      tone: tone
     };
   }
 
@@ -141,7 +165,9 @@ class ProductDescriptionGeneratorTool implements OpalTool {
   private generateDescription(
     productName: string,
     partNumber: string,
-    attributes: string[]
+    attributes: string[],
+    type: string,
+    tone: string
   ): string {
     // Parse attributes into a map for easier access
     const attrMap = new Map<string, string>();

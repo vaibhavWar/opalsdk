@@ -7,11 +7,11 @@ public class DescriptionGenerationService : IDescriptionGenerationService
 {
     private static readonly string[] PriorityKeys = { "capacity", "cartridge type", "weight", "dimensions", "material" };
 
-    public string GenerateProductDescription(string productName, string partNumber, List<string> attributes)
+    public string GenerateProductDescription(string productName, string partNumber, List<string> attributes, string type, string tone)
     {
         var (attrMap, attrList) = ParseAttributes(attributes);
         
-        var description = BuildDescription(productName, partNumber, attrMap, attrList);
+        var description = BuildDescription(productName, partNumber, attrMap, attrList, type, tone);
         
         return description;
     }
@@ -45,11 +45,13 @@ public class DescriptionGenerationService : IDescriptionGenerationService
         string productName, 
         string partNumber, 
         Dictionary<string, string> attrMap, 
-        List<(string key, string value, string original)> attrList)
+        List<(string key, string value, string original)> attrList,
+        string type,
+        string tone)
     {
         var description = $"The {productName} (Part# {partNumber}) ";
 
-        description += GetOpeningStatement(attrMap);
+        description += GetOpeningStatement(attrMap, type, tone);
         description += GetFeatureHighlights(attrList);
         description += GetBrandStatement(attrMap);
         description += GetWarrantyStatement(attrMap);
@@ -57,7 +59,7 @@ public class DescriptionGenerationService : IDescriptionGenerationService
         return description.Trim();
     }
 
-    private static string GetOpeningStatement(Dictionary<string, string> attrMap)
+    private static string GetOpeningStatement(Dictionary<string, string> attrMap, string type, string tone)
     {
         var hasPower = attrMap.ContainsKey("battery voltage (v)") ||
                        attrMap.ContainsKey("voltage") ||
@@ -65,6 +67,24 @@ public class DescriptionGenerationService : IDescriptionGenerationService
         var isCordless = attrMap.TryGetValue("cordless / corded", out var cordlessValue) &&
                          cordlessValue.ToLower() == "cordless";
 
+        // Adjust opening based on type and tone
+        if (type.ToLower() == "ecommerce" && tone.ToLower() == "professional")
+        {
+            if (hasPower && isCordless)
+            {
+                return "delivers powerful, reliable cordless performance for professional applications. ";
+            }
+            else if (hasPower)
+            {
+                return "offers consistent, professional-grade powered performance. ";
+            }
+            else
+            {
+                return "provides exceptional professional-grade quality and reliability. ";
+            }
+        }
+
+        // Default behavior
         if (hasPower && isCordless)
         {
             return "delivers powerful cordless performance. ";
