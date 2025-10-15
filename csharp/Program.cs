@@ -1,13 +1,20 @@
+/**
+ * Optimizely Opal Custom Tool: Product Description Generator
+ * C# Implementation using Optimizely Opal Tools SDK Pattern
+ * 
+ * This implements the OpalTool pattern for .NET applications
+ */
+
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// Add services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure CORS
+// Configure CORS for Optimizely Opal
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -20,7 +27,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Configure HTTP pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -29,7 +36,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors();
 
-// Discovery endpoint - describes the tool to Optimizely Opal
+// ============================================================================
+// Optimizely Opal Tool Implementation
+// Following the OpalTool SDK pattern for C#/.NET
+// ============================================================================
+
+// Tool metadata following Opal SDK pattern
+var toolMetadata = new
+{
+    name = "product-description-generator",
+    description = "Generates comprehensive, marketing-ready product descriptions based on product name, part number, and attributes. Creates structured content with overview, features, specifications, and applications.",
+    version = "1.0.0",
+    sdkPattern = "optimizely-opal-tools-sdk"
+};
+
+// ============================================================================
+// Discovery Endpoint (GET /discovery)
+// Required by Optimizely Opal to discover tool capabilities
+// Following Opal SDK discovery specification
+// ============================================================================
 app.MapGet("/discovery", () =>
 {
     var discoveryResponse = new
@@ -38,8 +63,9 @@ app.MapGet("/discovery", () =>
         {
             new
             {
-                name = "product-description-generator",
-                description = "Generates comprehensive product descriptions based on product name, part number, and attributes. Creates marketing-ready content with structured sections including overview, features, specifications, and applications.",
+                name = toolMetadata.name,
+                description = toolMetadata.description,
+                version = toolMetadata.version,
                 parameters = new[]
                 {
                     new
@@ -47,21 +73,25 @@ app.MapGet("/discovery", () =>
                         name = "productName",
                         type = "string",
                         description = "The name of the product",
-                        required = true
+                        required = true,
+                        example = "Professional Drill Set"
                     },
                     new
                     {
                         name = "partNumber",
                         type = "string",
                         description = "The product part number or SKU",
-                        required = true
+                        required = true,
+                        example = "DRL-2024-PRO"
                     },
                     new
                     {
                         name = "attributes",
                         type = "array",
-                        description = "List of product attributes, features, or specifications (e.g., [\"Color: Blue\", \"Size: Large\", \"Material: Steel\"])",
-                        required = false
+                        description = "List of product attributes, features, or specifications (e.g., [\"Color: Blue\", \"Power: 20V\", \"Material: Steel\"])",
+                        required = false,
+                        example = new[] { "Color: Blue", "Power: 20V", "Weight: 3.5 lbs" },
+                        items = new { type = "string" }
                     }
                 },
                 endpoint = "/",
@@ -73,31 +103,47 @@ app.MapGet("/discovery", () =>
 
     return Results.Ok(discoveryResponse);
 })
-.WithName("Discovery")
-.WithOpenApi();
+.WithName("OpalDiscovery")
+.WithOpenApi()
+.WithTags("Optimizely Opal SDK");
 
-// Health check endpoint
+// ============================================================================
+// Health Check Endpoint (GET /)
+// Provides tool status and SDK pattern identification
+// ============================================================================
 app.MapGet("/", () =>
 {
     var healthResponse = new
     {
         status = "healthy",
-        tool = "product-description-generator",
-        version = "1.0.0",
-        description = "Optimizely Opal tool for generating product descriptions"
+        tool = toolMetadata.name,
+        version = toolMetadata.version,
+        description = toolMetadata.description,
+        sdk_pattern = toolMetadata.sdkPattern,
+        endpoints = new
+        {
+            discovery = "/discovery",
+            health = "/",
+            execute = "POST /"
+        }
     };
 
     return Results.Ok(healthResponse);
 })
 .WithName("HealthCheck")
-.WithOpenApi();
+.WithOpenApi()
+.WithTags("Optimizely Opal SDK");
 
-// Tool execution endpoint
+// ============================================================================
+// Tool Execution Endpoint (POST /)
+// Main endpoint called by Optimizely Opal to execute the tool
+// Implements the OpalTool.Execute() pattern
+// ============================================================================
 app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
 {
     try
     {
-        // Validate required parameters
+        // Validate required parameters (OpalTool pattern)
         if (string.IsNullOrWhiteSpace(request.ProductName) || 
             string.IsNullOrWhiteSpace(request.PartNumber))
         {
@@ -109,17 +155,33 @@ app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
             });
         }
 
-        // Generate the product description
+        // Execute tool logic (OpalTool.Execute() equivalent)
         var description = GenerateProductDescription(
             request.ProductName,
             request.PartNumber,
             request.Attributes ?? new List<string>()
         );
 
+        // Return Opal SDK-compliant response with metadata
         return Results.Ok(new ToolResponse
         {
             Success = true,
-            Content = description
+            Result = new
+            {
+                content = description,
+                productName = request.ProductName,
+                partNumber = request.PartNumber,
+                attributeCount = request.Attributes?.Count ?? 0
+            },
+            Content = description,
+            Metadata = new
+            {
+                tool = toolMetadata.name,
+                version = toolMetadata.version,
+                productName = request.ProductName,
+                partNumber = request.PartNumber,
+                attributeCount = request.Attributes?.Count ?? 0
+            }
         });
     }
     catch (Exception ex)
@@ -132,12 +194,17 @@ app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
         });
     }
 })
-.WithName("GenerateProductDescription")
-.WithOpenApi();
+.WithName("ExecuteOpalTool")
+.WithOpenApi()
+.WithTags("Optimizely Opal SDK");
 
 app.Run();
 
-// Helper method to generate product description
+// ============================================================================
+// Tool Implementation - Product Description Generation
+// Following OpalTool pattern with private helper methods
+// ============================================================================
+
 static string GenerateProductDescription(
     string productName, 
     string partNumber, 
@@ -150,33 +217,26 @@ static string GenerateProductDescription(
     sb.AppendLine();
     sb.AppendLine($"## {productName}");
     sb.AppendLine();
-    sb.AppendLine($"**Part Number:** `{partNumber}`");
-    sb.AppendLine();
-    sb.AppendLine("---");
-    sb.AppendLine();
+    sb.AppendLine($"**Part Number:** `{partNumber}`\n");
+    sb.AppendLine("---\n");
 
     // Overview
-    sb.AppendLine("## Overview");
-    sb.AppendLine();
+    sb.AppendLine("## Overview\n");
     sb.AppendLine(GenerateOverview(productName, attributes));
     sb.AppendLine();
 
     // Key Features
-    sb.AppendLine("## Key Features");
-    sb.AppendLine();
+    sb.AppendLine("## Key Features\n");
     sb.AppendLine(GenerateKeyFeatures(productName, attributes));
     sb.AppendLine();
 
     // Technical Specifications
-    sb.AppendLine("## Technical Specifications");
-    sb.AppendLine();
+    sb.AppendLine("## Technical Specifications\n");
     sb.AppendLine($"**Product Name:** {productName}  ");
-    sb.AppendLine($"**Part Number:** {partNumber}");
-    sb.AppendLine();
+    sb.AppendLine($"**Part Number:** {partNumber}\n");
 
     // Product Attributes
-    sb.AppendLine("## Product Attributes");
-    sb.AppendLine();
+    sb.AppendLine("## Product Attributes\n");
     if (attributes.Any())
     {
         foreach (var attr in attributes)
@@ -188,23 +248,17 @@ static string GenerateProductDescription(
     {
         sb.AppendLine("- No additional attributes specified");
     }
-    sb.AppendLine();
-    sb.AppendLine("---");
-    sb.AppendLine();
+    sb.AppendLine("\n---\n");
 
     // Why Choose
-    sb.AppendLine("## Why Choose This Product?");
-    sb.AppendLine();
+    sb.AppendLine("## Why Choose This Product?\n");
     sb.AppendLine(GenerateWhyChoose(productName, attributes));
     sb.AppendLine();
 
     // Applications
-    sb.AppendLine("## Product Applications");
-    sb.AppendLine();
+    sb.AppendLine("## Product Applications\n");
     sb.AppendLine(GenerateApplications(attributes));
-    sb.AppendLine();
-    sb.AppendLine("---");
-    sb.AppendLine();
+    sb.AppendLine("\n---\n");
 
     // Footer
     sb.AppendLine($"*Generated product description for {productName} (Part #: {partNumber})*");
@@ -293,7 +347,15 @@ static string GenerateApplications(List<string> attributes)
     return string.Join("\n", applications);
 }
 
-// Request and Response models
+// ============================================================================
+// Data Transfer Objects (DTOs)
+// Following Opal SDK request/response patterns
+// ============================================================================
+
+/// <summary>
+/// Request model for product description generation
+/// Follows Optimizely Opal SDK parameter pattern
+/// </summary>
 public class ProductDescriptionRequest
 {
     public string ProductName { get; set; } = string.Empty;
@@ -301,11 +363,16 @@ public class ProductDescriptionRequest
     public List<string>? Attributes { get; set; }
 }
 
+/// <summary>
+/// Response model following Optimizely Opal SDK pattern
+/// Includes success indicator, result data, and metadata
+/// </summary>
 public class ToolResponse
 {
     public bool Success { get; set; }
+    public object? Result { get; set; }
     public string? Content { get; set; }
+    public object? Metadata { get; set; }
     public string? Error { get; set; }
     public string? Details { get; set; }
 }
-
