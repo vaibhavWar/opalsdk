@@ -89,7 +89,7 @@ app.MapGet("/discovery", () =>
                         name = "attributes",
                         type = "array",
                         description = "List of product attributes, features, or specifications (e.g., [\"Color: Blue\", \"Power: 20V\", \"Material: Steel\"])",
-                        required = false,
+                        required = true,
                         example = new[] { "Color: Blue", "Power: 20V", "Weight: 3.5 lbs" },
                         items = new { type = "string" }
                     }
@@ -145,13 +145,25 @@ app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
     {
         // Validate required parameters (OpalTool pattern)
         if (string.IsNullOrWhiteSpace(request.ProductName) || 
-            string.IsNullOrWhiteSpace(request.PartNumber))
+            string.IsNullOrWhiteSpace(request.PartNumber) ||
+            request.Attributes == null)
         {
             return Results.BadRequest(new ToolResponse
             {
                 Success = false,
                 Error = "Missing required parameters",
-                Details = "Both productName and partNumber are required"
+                Details = "productName, partNumber, and attributes are required"
+            });
+        }
+
+        // Validate attributes is not empty
+        if (request.Attributes.Count == 0)
+        {
+            return Results.BadRequest(new ToolResponse
+            {
+                Success = false,
+                Error = "Invalid attributes",
+                Details = "attributes must contain at least one item"
             });
         }
 
@@ -159,7 +171,7 @@ app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
         var description = GenerateProductDescription(
             request.ProductName,
             request.PartNumber,
-            request.Attributes ?? new List<string>()
+            request.Attributes
         );
 
         // Return Opal SDK-compliant response with metadata
@@ -171,7 +183,7 @@ app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
                 content = description,
                 productName = request.ProductName,
                 partNumber = request.PartNumber,
-                attributeCount = request.Attributes?.Count ?? 0
+                attributeCount = request.Attributes.Count
             },
             Content = description,
             Metadata = new
@@ -180,7 +192,7 @@ app.MapPost("/", async ([FromBody] ProductDescriptionRequest request) =>
                 version = toolMetadata.version,
                 productName = request.ProductName,
                 partNumber = request.PartNumber,
-                attributeCount = request.Attributes?.Count ?? 0
+                attributeCount = request.Attributes.Count
             }
         });
     }
@@ -254,7 +266,7 @@ public class ProductDescriptionRequest
 {
     public string ProductName { get; set; } = string.Empty;
     public string PartNumber { get; set; } = string.Empty;
-    public List<string>? Attributes { get; set; }
+    public List<string> Attributes { get; set; } = new List<string>();
 }
 
 /// <summary>

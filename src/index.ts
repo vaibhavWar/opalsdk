@@ -39,7 +39,7 @@ interface OpalTool {
 interface ProductDescriptionParams {
   productName: string;
   partNumber: string;
-  attributes?: string[];
+  attributes: string[];
 }
 
 interface ProductDescriptionResult {
@@ -88,7 +88,7 @@ class ProductDescriptionGeneratorTool implements OpalTool {
           name: 'attributes',
           type: 'array',
           description: 'List of product attributes, features, or specifications (e.g., ["Color: Blue", "Power: 20V", "Material: Steel"])',
-          required: false,
+          required: true,
           example: ['Color: Blue', 'Power: 20V', 'Weight: 3.5 lbs'],
           items: {
             type: 'string'
@@ -107,12 +107,16 @@ class ProductDescriptionGeneratorTool implements OpalTool {
    */
   async execute(params: ProductDescriptionParams): Promise<ProductDescriptionResult> {
     // Validate required parameters
-    if (!params.productName || !params.partNumber) {
-      throw new Error('Missing required parameters: productName and partNumber are required');
+    if (!params.productName || !params.partNumber || !params.attributes) {
+      throw new Error('Missing required parameters: productName, partNumber, and attributes are required');
     }
 
-    // Default attributes to empty array if not provided
-    const attributes = params.attributes || [];
+    // Validate attributes is an array
+    if (!Array.isArray(params.attributes) || params.attributes.length === 0) {
+      throw new Error('attributes must be a non-empty array');
+    }
+
+    const attributes = params.attributes;
 
     // Generate the product description
     const description = this.generateDescription(
