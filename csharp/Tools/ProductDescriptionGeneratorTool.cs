@@ -22,32 +22,57 @@ public class ProductDescriptionGeneratorTool
     [Description("Generates natural, AI-like product descriptions dynamically based on any product attributes")]
     public object GenerateDescription(ProductDescriptionParameters parameters)
     {
-        // Validate parameters
-        ValidateParameters(parameters);
-
-        // Set defaults for optional parameters
-        var type = string.IsNullOrWhiteSpace(parameters.Type) ? "general" : parameters.Type;
-        var tone = string.IsNullOrWhiteSpace(parameters.Tone) ? "professional" : parameters.Tone;
-
-        // Generate the description
-        var description = _descriptionService.GenerateProductDescription(
-            parameters.ProductName,
-            parameters.PartNumber,
-            parameters.Attributes,
-            type,
-            tone
-        );
-
-        // Return result with metadata
-        return new
+        try
         {
-            content = description,
-            productName = parameters.ProductName,
-            partNumber = parameters.PartNumber,
-            attributeCount = parameters.Attributes.Count,
-            type = type,
-            tone = tone
-        };
+            // Validate parameters
+            ValidateParameters(parameters);
+
+            // Set defaults for optional parameters
+            var type = string.IsNullOrWhiteSpace(parameters.Type) ? "general" : parameters.Type;
+            var tone = string.IsNullOrWhiteSpace(parameters.Tone) ? "professional" : parameters.Tone;
+
+            // Generate the description
+            var description = _descriptionService.GenerateProductDescription(
+                parameters.ProductName,
+                parameters.PartNumber,
+                parameters.Attributes,
+                type,
+                tone
+            );
+
+            // Return result with metadata
+            return new
+            {
+                content = description,
+                productName = parameters.ProductName,
+                partNumber = parameters.PartNumber,
+                attributeCount = parameters.Attributes.Count,
+                type = type,
+                tone = tone,
+                success = true
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            // Return validation errors
+            return new
+            {
+                error = "Validation Error",
+                message = ex.Message,
+                success = false
+            };
+        }
+        catch (Exception ex)
+        {
+            // Return general errors
+            return new
+            {
+                error = "Processing Error",
+                message = ex.Message,
+                details = ex.ToString(),
+                success = false
+            };
+        }
     }
 
     private static void ValidateParameters(ProductDescriptionParameters parameters)

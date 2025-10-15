@@ -19,6 +19,11 @@ using ProductDescriptionGenerator.Tools;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // Add services to the container
 builder.Services.AddControllers();
 
@@ -44,6 +49,27 @@ builder.Services.AddOpalTool<ProductDescriptionGeneratorTool>();
 
 var app = builder.Build();
 
+// Add global error handling
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Unhandled exception occurred");
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = "Internal Server Error",
+            message = ex.Message,
+            details = ex.ToString()
+        });
+    }
+});
+
 // Configure the HTTP request pipeline
 app.UseCors();
 app.UseAuthorization();
@@ -52,5 +78,10 @@ app.MapControllers();
 
 // Map Opal Tools endpoints (handles /discovery and execution automatically)
 app.MapOpalTools();
+
+// Log startup info
+app.Logger.LogInformation("Product Description Generator started");
+app.Logger.LogInformation("Discovery endpoint: /discovery");
+app.Logger.LogInformation("Tool endpoint: /tools/product-description-generator");
 
 app.Run();
