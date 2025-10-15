@@ -1,0 +1,59 @@
+{
+  "example1_basic": {
+    "productName": "Professional Drill Set",
+    "partNumber": "DRL-2024-PRO",
+    "attributes": [
+      "Color: Black and Orange",
+      "Power: 20V Lithium-Ion",
+      "Chuck Size: 1/2 inch"
+    ]
+  },
+  "example2_detailed": {
+    "productName": "Wireless Bluetooth Keyboard",
+    "partNumber": "KB-W-2024-BT",
+    "attributes": [
+      "Connectivity: Bluetooth 5.0",
+      "Battery: Rechargeable Lithium-Ion",
+      "Keys: 78-key compact layout",
+      "Compatibility: Windows, Mac, iOS, Android",
+      "Range: Up to 30 feet",
+      "Color: Space Grey",
+      "Special Features: Backlit keys with 3 brightness levels",
+      "Weight: 1.2 lbs"
+    ]
+  },
+  "example3_industrial": {
+    "productName": "Heavy Duty Industrial Hydraulic Press",
+    "partNumber": "HYD-PRESS-5000",
+    "attributes": [
+      "Capacity: 50 Tons",
+      "Working Height: 24 inches",
+      "Bed Size: 18\" x 24\"",
+      "Motor: 3HP, 220V, Single Phase",
+      "Pump: Manual with pressure gauge",
+      "Frame: Heavy-gauge steel construction",
+      "Safety: Dual palm buttons, emergency stop",
+      "Certification: CE certified"
+    ]
+  },
+  "example4_electronics": {
+    "productName": "Smart Home Security Camera",
+    "partNumber": "CAM-SH-4K-2024",
+    "attributes": [
+      "Resolution: 4K Ultra HD (3840x2160)",
+      "Night Vision: IR up to 50ft",
+      "Field of View: 130° wide angle",
+      "Audio: Two-way with noise cancellation",
+      "Storage: Cloud + Local microSD (up to 256GB)",
+      "AI Features: Person detection, package detection",
+      "Weather Resistance: IP66 rated",
+      "Power: Wired or battery (solar panel compatible)"
+    ]
+  },
+  "example5_minimal": {
+    "productName": "Standard Office Stapler",
+    "partNumber": "STA-001",
+    "attributes": []
+  }
+}
+
