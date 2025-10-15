@@ -1,41 +1,40 @@
 /**
  * Optimizely Opal Custom Tool: Product Description Generator
- * Implements Optimizely Opal Tools SDK Pattern
+ * TypeScript Implementation for Cloudflare Workers
+ * Following SDK patterns from: https://academy.optimizely.com/student/path/2839076/activity/4331694
  * 
- * Generates product descriptions based on:
- * - Product Name
- * - Product Number (Part #)
- * - Product Attributes
+ * This tool generates natural, AI-like product descriptions
+ * based on product name, part number, and attributes.
  */
 
-// SDK-compatible type definitions
+// ===================================================================
+// Type Definitions (Following Opal SDK Pattern)
+// ===================================================================
+
+enum ParameterType {
+  String = 'string',
+  Number = 'number',
+  Boolean = 'boolean',
+  Array = 'array',
+  Object = 'object'
+}
+
 interface ToolParameter {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'array' | 'object';
+  type: ParameterType;
   description: string;
   required: boolean;
+  enum?: string[];
+  items?: { type: ParameterType };
   example?: any;
-  items?: {
-    type: string;
-  };
 }
 
 interface ToolDefinition {
   name: string;
   description: string;
-  version: string;
   parameters: ToolParameter[];
 }
 
-interface OpalTool {
-  name: string;
-  description: string;
-  version: string;
-  getDefinition(): ToolDefinition;
-  execute(params: any): Promise<any>;
-}
-
-// Tool-specific interfaces
 interface ProductDescriptionParams {
   productName: string;
   partNumber: string;
@@ -44,86 +43,63 @@ interface ProductDescriptionParams {
   tone?: string;
 }
 
-interface ProductDescriptionResult {
-  content: string;
-  productName: string;
-  partNumber: string;
-  attributeCount: number;
-  type: string;
-  tone: string;
-}
+// ===================================================================
+// Product Description Generator Tool (Following SDK Pattern)
+// Mimics @tool decorator behavior for Cloudflare Workers
+// ===================================================================
 
-/**
- * @OpalTool decorator pattern
- * Product Description Generator Tool
- * This class implements the Opal Tool interface following SDK patterns
- */
-class ProductDescriptionGeneratorTool implements OpalTool {
-  // Tool metadata (following Opal SDK pattern)
-  readonly name = 'product-description-generator';
-  readonly description = 'Generates natural, AI-like product descriptions dynamically based on any product attributes.';
-  readonly version = '1.0.0';
-
-  /**
-   * Get tool definition for Optimizely Opal discovery
-   * This method is called by Opal to understand the tool's capabilities
-   */
-  getDefinition(): ToolDefinition {
-    return {
-      name: this.name,
-      description: this.description,
-      version: this.version,
-      parameters: [
-        {
-          name: 'productName',
-          type: 'string',
-          description: 'The name of the product',
-          required: true,
-          example: 'Professional Drill Set'
-        },
-        {
-          name: 'partNumber',
-          type: 'string',
-          description: 'The product part number or SKU',
-          required: true,
-          example: 'DRL-2024-PRO'
-        },
-        {
-          name: 'attributes',
-          type: 'array',
-          description: 'List of product attributes, features, or specifications (e.g., ["Color: Blue", "Power: 20V", "Material: Steel"])',
-          required: true,
-          example: ['Color: Blue', 'Power: 20V', 'Weight: 3.5 lbs'],
-          items: {
-            type: 'string'
-          }
-        },
-        {
-          name: 'type',
-          type: 'string',
-          description: 'The type or category of content (e.g., "ecommerce", "technical", "marketing")',
-          required: false,
-          example: 'ecommerce'
-        },
-        {
-          name: 'tone',
-          type: 'string',
-          description: 'The tone of the description (e.g., "professional", "casual", "enthusiastic")',
-          required: false,
-          example: 'professional'
-        }
-      ]
-    };
-  }
+class ProductDescriptionGeneratorTool {
+  // Tool metadata (similar to @tool decorator)
+  readonly toolDefinition: ToolDefinition = {
+    name: 'product-description-generator',
+    description: 'Generates natural, AI-like product descriptions dynamically based on any product attributes.',
+    parameters: [
+      {
+        name: 'productName',
+        type: ParameterType.String,
+        description: 'The name of the product',
+        required: true,
+        example: 'DEWALT 20V Acrylic Dispenser 101 28 oz'
+      },
+      {
+        name: 'partNumber',
+        type: ParameterType.String,
+        description: 'The product part number or SKU',
+        required: true,
+        example: '211DCE595D1'
+      },
+      {
+        name: 'attributes',
+        type: ParameterType.Array,
+        description: 'List of product attributes, features, or specifications (e.g., ["Brand: DEWALT", "Voltage: 20V"])',
+        required: true,
+        items: { type: ParameterType.String },
+        example: ['Brand: DEWALT', 'Battery Voltage (V): 20', 'Capacity: 28 oz.']
+      },
+      {
+        name: 'type',
+        type: ParameterType.String,
+        description: 'The type or category of content (e.g., "ecommerce", "technical", "marketing"). Defaults to "general".',
+        required: false,
+        enum: ['ecommerce', 'technical', 'marketing', 'general'],
+        example: 'ecommerce'
+      },
+      {
+        name: 'tone',
+        type: ParameterType.String,
+        description: 'The tone of the description (e.g., "professional", "casual", "enthusiastic"). Defaults to "professional".',
+        required: false,
+        enum: ['professional', 'casual', 'enthusiastic'],
+        example: 'professional'
+      }
+    ]
+  };
 
   /**
-   * Execute the tool with given parameters
-   * This is the main entry point called by Optimizely Opal
-   * 
-   * @param params - Product description parameters
-   * @returns Promise with the generated description
+   * Execute method - main entry point (following SDK pattern)
+   * Similar to async execute() in the Optimizely Academy examples
    */
-  async execute(params: ProductDescriptionParams): Promise<ProductDescriptionResult> {
+  async execute(params: ProductDescriptionParams) {
     // Validate required parameters
     if (!params.productName || !params.partNumber || !params.attributes) {
       throw new Error('Missing required parameters: productName, partNumber, and attributes are required');
@@ -134,7 +110,6 @@ class ProductDescriptionGeneratorTool implements OpalTool {
       throw new Error('attributes must be a non-empty array');
     }
 
-    const attributes = params.attributes;
     const type = params.type || 'general';
     const tone = params.tone || 'professional';
 
@@ -142,7 +117,7 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     const description = this.generateDescription(
       params.productName,
       params.partNumber,
-      attributes,
+      params.attributes,
       type,
       tone
     );
@@ -151,7 +126,7 @@ class ProductDescriptionGeneratorTool implements OpalTool {
       content: description,
       productName: params.productName,
       partNumber: params.partNumber,
-      attributeCount: attributes.length,
+      attributeCount: params.attributes.length,
       type: type,
       tone: tone
     };
@@ -159,7 +134,6 @@ class ProductDescriptionGeneratorTool implements OpalTool {
 
   /**
    * Generate natural, AI-like product description dynamically
-   * Works with any attributes - no hardcoding
    * @private
    */
   private generateDescription(
@@ -192,16 +166,27 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     const hasPower = attrMap.has('battery voltage (v)') || attrMap.has('voltage') || attrMap.has('power');
     const isCordless = attrMap.get('cordless / corded')?.toLowerCase() === 'cordless';
     
-    if (hasPower && isCordless) {
-      description += 'delivers powerful cordless performance. ';
-    } else if (hasPower) {
-      description += 'offers reliable powered performance. ';
+    // Adjust opening based on type and tone
+    if (type.toLowerCase() === 'ecommerce' && tone.toLowerCase() === 'professional') {
+      if (hasPower && isCordless) {
+        description += 'delivers powerful, reliable cordless performance for professional applications. ';
+      } else if (hasPower) {
+        description += 'offers consistent, professional-grade powered performance. ';
+      } else {
+        description += 'provides exceptional professional-grade quality and reliability. ';
+      }
     } else {
-      description += 'provides professional-grade quality. ';
+      // Default behavior
+      if (hasPower && isCordless) {
+        description += 'delivers powerful cordless performance. ';
+      } else if (hasPower) {
+        description += 'offers reliable powered performance. ';
+      } else {
+        description += 'provides professional-grade quality. ';
+      }
     }
     
     // Build feature highlights from meaningful attributes with context
-    // Prioritize attributes with key information (capacity, cartridge type, etc.)
     const priorityKeys = ['capacity', 'cartridge type', 'weight', 'dimensions', 'material'];
     const meaningfulAttrs = attrList
       .filter(a => 
@@ -252,169 +237,118 @@ class ProductDescriptionGeneratorTool implements OpalTool {
 }
 
 // ===================================================================
-// Cloudflare Workers Integration
-// This section integrates the Opal Tool with Cloudflare Workers
+// Tool Service (Following SDK Pattern)
+// Manages tool registration and execution
 // ===================================================================
 
-// Create tool instance following Opal SDK pattern
-const tool = new ProductDescriptionGeneratorTool();
+class ToolsService {
+  private tools: Map<string, ProductDescriptionGeneratorTool> = new Map();
 
-/**
- * Cloudflare Workers request handler
- * Implements the Optimizely Opal tool endpoints
- */
+  registerTool(tool: ProductDescriptionGeneratorTool) {
+    this.tools.set(tool.toolDefinition.name, tool);
+  }
+
+  getDiscovery() {
+    const functions = Array.from(this.tools.values()).map(tool => ({
+      name: tool.toolDefinition.name,
+      description: tool.toolDefinition.description,
+      parameters: tool.toolDefinition.parameters,
+      endpoint: '/',
+      http_method: 'POST',
+      auth_requirements: []
+    }));
+
+    return { functions };
+  }
+
+  async executeTool(toolName: string, params: any) {
+    const tool = this.tools.get(toolName);
+    if (!tool) {
+      throw new Error(`Tool '${toolName}' not found`);
+    }
+    return await tool.execute(params);
+  }
+}
+
+// ===================================================================
+// Initialize Service and Register Tool
+// ===================================================================
+
+const toolsService = new ToolsService();
+const productDescriptionTool = new ProductDescriptionGeneratorTool();
+toolsService.registerTool(productDescriptionTool);
+
+// ===================================================================
+// Cloudflare Workers Fetch Handler
+// Routes requests through the Tools Service
+// ===================================================================
+
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: any, ctx: any): Promise<Response> {
     const url = new URL(request.url);
-
-    // CORS headers for web integration
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Opal-Request-Id',
-    };
-
-    // Handle CORS preflight requests
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: corsHeaders });
-    }
-
+    
     try {
-      // ===================================================================
-      // Discovery Endpoint (GET /discovery)
-      // Required by Optimizely Opal to discover tool capabilities
-      // ===================================================================
-      if (request.method === 'GET' && url.pathname === '/discovery') {
-        const definition = tool.getDefinition();
-        
-        // Format response according to Opal discovery specification
-        const discoveryResponse = {
-          functions: [
-            {
-              name: definition.name,
-              description: definition.description,
-              version: definition.version,
-              parameters: definition.parameters,
-              endpoint: '/',
-              http_method: 'POST',
-              auth_requirements: []
-            }
-          ]
-        };
-
-        return new Response(JSON.stringify(discoveryResponse, null, 2), {
+      // Route discovery endpoint
+      if (url.pathname === '/discovery' && request.method === 'GET') {
+        const discovery = toolsService.getDiscovery();
+        return new Response(JSON.stringify(discovery), {
           headers: {
             'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
-        });
-      }
-
-      // ===================================================================
-      // Health Check Endpoint (GET /)
-      // Provides tool status and version information
-      // ===================================================================
-      if (request.method === 'GET' && url.pathname === '/') {
-        return new Response(JSON.stringify({
-          status: 'healthy',
-          tool: tool.name,
-          version: tool.version,
-          description: tool.description,
-          sdk_pattern: 'optimizely-opal-tools-sdk',
-          endpoints: {
-            discovery: '/discovery',
-            health: '/',
-            execute: 'POST /'
+            'Access-Control-Allow-Origin': '*'
           }
-        }, null, 2), {
-          headers: {
-            'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
         });
       }
-
-      // ===================================================================
-      // Tool Execution Endpoint (POST /)
-      // Main endpoint called by Optimizely Opal to execute the tool
-      // ===================================================================
-      if (request.method === 'POST' && url.pathname === '/') {
+      
+      // Route tool execution
+      if (url.pathname === '/' && request.method === 'POST') {
         const body = await request.json() as any;
-        
-        // Extract parameters from various possible Opal invocation formats
-        let params: ProductDescriptionParams;
-        
-        if (body.parameters) {
-          // Format: { parameters: { productName: "...", ... } }
-          params = body.parameters;
-        } else if (body.arguments) {
-          // Format: { arguments: { productName: "...", ... } }
-          params = body.arguments;
-        } else if (body.input) {
-          // Format: { input: { productName: "...", ... } }
-          params = body.input;
-        } else {
-          // Direct format: { productName: "...", ... }
-          params = body;
-        }
-
-        // Execute the tool using SDK pattern
-        const result = await tool.execute(params);
-
-        // Return response in Opal-compatible format
-        return new Response(JSON.stringify({
-          success: true,
-          result: result,
-          content: result.content,
-          metadata: {
-            tool: tool.name,
-            version: tool.version,
-            productName: result.productName,
-            partNumber: result.partNumber,
-            attributeCount: result.attributeCount
-          }
-        }, null, 2), {
+        const result = await toolsService.executeTool('product-description-generator', body);
+        return new Response(JSON.stringify(result), {
           headers: {
             'Content-Type': 'application/json',
-            ...corsHeaders,
-          },
+            'Access-Control-Allow-Origin': '*'
+          }
         });
       }
-
-      // Route not found
-      return new Response(JSON.stringify({
-        error: 'Not Found',
-        message: 'Available endpoints: GET /discovery, GET / (health), POST / (execute)',
-        tool: tool.name,
-        version: tool.version,
-        endpoints: {
-          discovery: '/discovery',
-          health: '/',
-          execute: 'POST /'
+      
+      // Health check
+      if (url.pathname === '/' && request.method === 'GET') {
+        return new Response(JSON.stringify({ 
+          status: 'healthy',
+          service: 'Product Description Generator',
+          version: '1.0.0'
+        }), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          }
+        });
+      }
+      
+      // Handle CORS preflight
+      if (request.method === 'OPTIONS') {
+        return new Response(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+          }
+        });
+      }
+      
+      // Not found
+      return new Response('Not Found', { status: 404 });
+      
+    } catch (error: any) {
+      return new Response(JSON.stringify({ 
+        error: error.message || 'Internal Server Error'
+      }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
         }
-      }), {
-        status: 404,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
-      });
-
-    } catch (error) {
-      // Error handling with detailed information
-      return new Response(JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        details: error instanceof Error ? error.stack : undefined,
-        tool: tool.name,
-        version: tool.version
-      }), {
-        status: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          ...corsHeaders,
-        },
       });
     }
-  },
+  }
 };
