@@ -222,29 +222,97 @@ static string GenerateProductDescription(
     string partNumber, 
     List<string> attributes)
 {
-    // Build concise description
-    var description = $"{productName} (Part #: {partNumber}) - ";
-    
-    // Add key selling point
-    description += "A premium quality product designed for exceptional performance and reliability. ";
-    
-    // Add attributes if provided
-    if (attributes.Any())
+    // Parse attributes into key-value pairs
+    var attrMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    foreach (var attr in attributes)
     {
-        var attributesToShow = attributes.Take(3).ToList();
-        description += $"Features include: {string.Join(", ", attributesToShow)}";
-        
-        if (attributes.Count > 3)
+        var parts = attr.Split(':', 2);
+        if (parts.Length == 2)
         {
-            description += $", and {attributes.Count - 3} more";
+            attrMap[parts[0].Trim()] = parts[1].Trim();
+        }
+    }
+
+    // Start with product name and part number
+    var description = $"The {productName} (Part# {partNumber}) ";
+    
+    // Add dynamic opening based on product type or key features
+    attrMap.TryGetValue("brand", out var brand);
+    attrMap.TryGetValue("battery voltage (v)", out var voltage);
+    attrMap.TryGetValue("capacity", out var capacity);
+    attrMap.TryGetValue("cordless / corded", out var cordless);
+    
+    // Build natural sentences based on available attributes
+    if (!string.IsNullOrEmpty(voltage) && cordless?.ToLower() == "cordless")
+    {
+        description += $"delivers powerful, precise performance with its {voltage}V battery system. ";
+    }
+    else
+    {
+        description += "offers professional-grade performance and reliability. ";
+    }
+    
+    // Add key features naturally
+    var features = new List<string>();
+    
+    if (!string.IsNullOrEmpty(capacity))
+    {
+        features.Add($"{capacity} capacity");
+    }
+    
+    if (attrMap.TryGetValue("cartridge type", out var cartridgeType))
+    {
+        features.Add($"compatible with {cartridgeType} cartridges");
+    }
+    
+    if (attrMap.TryGetValue("charger included", out var chargerIncluded) && 
+        chargerIncluded.ToLower() == "yes")
+    {
+        features.Add("includes charger for convenience");
+    }
+    
+    if (features.Any())
+    {
+        description += $"This {cordless?.ToLower() ?? "tool"} features {string.Join(", ", features.Take(2))}";
+        if (features.Count > 2)
+        {
+            description += $", and {features[2]}";
         }
         description += ". ";
     }
     
-    // Add closing statement
-    description += "Engineered with precision and built to last, offering the perfect balance of quality, functionality, and value for professional use.";
+    // Add design/brand statement if available
+    attrMap.TryGetValue("cs_color", out var color);
+    if (!string.IsNullOrEmpty(brand) && !string.IsNullOrEmpty(color))
+    {
+        description += $"Featuring {brand}'s signature {color} design, it's built for professional use. ";
+    }
+    else if (!string.IsNullOrEmpty(brand))
+    {
+        description += $"Built with {brand} quality for professional applications. ";
+    }
     
-    // Trim to approximately 500 characters
+    // Add warranty information if available
+    if (attrMap.TryGetValue("cs_manufacturer_warranty", out var warranty))
+    {
+        var warrantyShort = warranty.Replace(" limited warranty", "").Replace(" year", "-year");
+        description += $"Backed by {warrantyShort.Split('/')[0]} warranty";
+        if (warranty.Contains("service"))
+        {
+            description += ", 1-year free service";
+        }
+        if (warranty.Contains("money back"))
+        {
+            description += ", and 90-day money-back guarantee";
+        }
+        description += ".";
+    }
+    else
+    {
+        description += "Designed for demanding professional applications.";
+    }
+    
+    // Ensure it stays under 500 characters
     if (description.Length > 500)
     {
         description = description.Substring(0, 497) + "...";

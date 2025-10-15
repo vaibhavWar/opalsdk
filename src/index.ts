@@ -134,7 +134,7 @@ class ProductDescriptionGeneratorTool implements OpalTool {
   }
 
   /**
-   * Generate concise 500-character product description
+   * Generate natural, AI-like product description (~500 characters)
    * @private
    */
   private generateDescription(
@@ -142,25 +142,81 @@ class ProductDescriptionGeneratorTool implements OpalTool {
     partNumber: string,
     attributes: string[]
   ): string {
-    // Build concise description
-    let description = `${productName} (Part #: ${partNumber}) - `;
-    
-    // Add key selling point
-    description += `A premium quality product designed for exceptional performance and reliability. `;
-    
-    // Add attributes if provided
-    if (attributes.length > 0) {
-      description += `Features include: ${attributes.slice(0, 3).join(', ')}`;
-      if (attributes.length > 3) {
-        description += `, and ${attributes.length - 3} more`;
+    // Parse attributes into key-value pairs
+    const attrMap = new Map<string, string>();
+    attributes.forEach(attr => {
+      const parts = attr.split(':');
+      if (parts.length === 2) {
+        attrMap.set(parts[0].trim().toLowerCase(), parts[1].trim());
       }
-      description += `. `;
+    });
+
+    // Start with product name and part number
+    let description = `The ${productName} (Part# ${partNumber}) `;
+    
+    // Add dynamic opening based on product type or key features
+    const brand = attrMap.get('brand');
+    const voltage = attrMap.get('battery voltage (v)');
+    const capacity = attrMap.get('capacity');
+    const cordless = attrMap.get('cordless / corded');
+    
+    // Build natural sentences based on available attributes
+    if (voltage && (cordless?.toLowerCase() === 'cordless')) {
+      description += `delivers powerful, precise performance with its ${voltage}V battery system. `;
+    } else {
+      description += `offers professional-grade performance and reliability. `;
     }
     
-    // Add closing statement
-    description += `Engineered with precision and built to last, offering the perfect balance of quality, functionality, and value for professional use.`;
+    // Add key features naturally
+    const features: string[] = [];
     
-    // Trim to approximately 500 characters
+    if (capacity) {
+      features.push(`${capacity} capacity`);
+    }
+    
+    const cartridgeType = attrMap.get('cartridge type');
+    if (cartridgeType) {
+      features.push(`compatible with ${cartridgeType} cartridges`);
+    }
+    
+    const chargerIncluded = attrMap.get('charger included');
+    if (chargerIncluded?.toLowerCase() === 'yes') {
+      features.push('includes charger for convenience');
+    }
+    
+    if (features.length > 0) {
+      description += `This ${cordless?.toLowerCase() || 'tool'} features ${features.slice(0, 2).join(', ')}`;
+      if (features.length > 2) {
+        description += `, and ${features[2]}`;
+      }
+      description += '. ';
+    }
+    
+    // Add design/brand statement if available
+    const color = attrMap.get('cs_color');
+    if (brand && color) {
+      description += `Featuring ${brand}'s signature ${color} design, it's built for professional use. `;
+    } else if (brand) {
+      description += `Built with ${brand} quality for professional applications. `;
+    }
+    
+    // Add warranty information if available
+    const warranty = attrMap.get('cs_manufacturer_warranty');
+    if (warranty) {
+      const warrantyShort = warranty.replace(' limited warranty', '').replace(' year', '-year');
+      description += `Backed by ${warrantyShort.split('/')[0]} warranty`;
+      if (warranty.includes('service')) {
+        description += ', 1-year free service';
+      }
+      if (warranty.includes('money back')) {
+        description += ', and 90-day money-back guarantee';
+      }
+      description += '.';
+    } else {
+      description += `Designed for demanding professional applications.`;
+    }
+    
+    // Ensure it stays under 500 characters
     if (description.length > 500) {
       description = description.substring(0, 497) + '...';
     }
