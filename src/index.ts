@@ -303,10 +303,10 @@ export default {
 
     try {
       // ===================================================================
-      // Discovery Endpoint (GET /discovery)
+      // Discovery Endpoint (GET /tools/discovery)
       // Required by Optimizely Opal to discover tool capabilities
       // ===================================================================
-      if (request.method === 'GET' && url.pathname === '/discovery') {
+      if (request.method === 'GET' && url.pathname === '/tools/discovery') {
         const definition = tool.getDefinition();
         
         // Format response according to Opal discovery specification
@@ -317,7 +317,7 @@ export default {
               description: definition.description,
               version: definition.version,
               parameters: definition.parameters,
-              endpoint: '/',
+              endpoint: '/tools/execute',
               http_method: 'POST',
               auth_requirements: []
             }
@@ -333,10 +333,10 @@ export default {
       }
 
       // ===================================================================
-      // Health Check Endpoint (GET /)
+      // Health Check Endpoint (GET /tools/health)
       // Provides tool status and version information
       // ===================================================================
-      if (request.method === 'GET' && url.pathname === '/') {
+      if (request.method === 'GET' && (url.pathname === '/tools/health' || url.pathname === '/tools' || url.pathname === '/')) {
         return new Response(JSON.stringify({
           status: 'healthy',
           tool: tool.name,
@@ -344,9 +344,9 @@ export default {
           description: tool.description,
           sdk_pattern: 'optimizely-opal-tools-sdk',
           endpoints: {
-            discovery: '/discovery',
-            health: '/',
-            execute: 'POST /'
+            discovery: '/tools/discovery',
+            health: '/tools/health',
+            execute: 'POST /tools/execute'
           }
         }, null, 2), {
           headers: {
@@ -357,10 +357,10 @@ export default {
       }
 
       // ===================================================================
-      // Tool Execution Endpoint (POST /)
+      // Tool Execution Endpoint (POST /tools/execute)
       // Main endpoint called by Optimizely Opal to execute the tool
       // ===================================================================
-      if (request.method === 'POST' && url.pathname === '/') {
+      if (request.method === 'POST' && url.pathname === '/tools/execute') {
         const body = await request.json() as any;
         
         // Extract parameters from various possible Opal invocation formats
@@ -406,9 +406,14 @@ export default {
       // Route not found
       return new Response(JSON.stringify({
         error: 'Not Found',
-        message: 'Available endpoints: GET /discovery, GET / (health), POST / (execute)',
+        message: 'Available endpoints: GET /tools/discovery, GET /tools/health, POST /tools/execute',
         tool: tool.name,
-        version: tool.version
+        version: tool.version,
+        endpoints: {
+          discovery: '/tools/discovery',
+          health: '/tools/health',
+          execute: 'POST /tools/execute'
+        }
       }), {
         status: 404,
         headers: {
