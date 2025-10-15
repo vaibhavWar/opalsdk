@@ -265,17 +265,30 @@ static string GenerateProductDescription(
         description += "provides professional-grade quality. ";
     }
     
-    // Build feature highlights from first few meaningful attributes
+    // Build feature highlights from meaningful attributes with context
+    // Prioritize attributes with key information (capacity, cartridge type, etc.)
+    var priorityKeys = new[] { "capacity", "cartridge type", "weight", "dimensions", "material" };
     var meaningfulAttrs = attrList
         .Where(a => !a.key.Contains("cs_") && 
+                    a.key != "brand" &&
+                    a.key != "cordless / corded" &&
                     a.value.ToLower() != "yes" && 
-                    a.value.ToLower() != "no")
+                    a.value.ToLower() != "no" &&
+                    a.value.Length > 2)
+        .OrderBy(a => priorityKeys.Any(k => a.key.Contains(k)) ? 0 : 1)
         .Take(3)
         .ToList();
     
     if (meaningfulAttrs.Any())
     {
-        var features = string.Join(", ", meaningfulAttrs.Select(a => a.value));
+        var features = string.Join(", ", meaningfulAttrs.Select(a => {
+            // For better readability, include key for context if value doesn't already contain it
+            if (a.value.Length < 15 && !a.value.ToLower().Contains(a.key.Split(' ')[0]))
+            {
+                return $"{a.key}: {a.value}";
+            }
+            return a.value;
+        }));
         description += $"Features include {features}. ";
     }
     

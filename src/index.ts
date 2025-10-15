@@ -174,15 +174,35 @@ class ProductDescriptionGeneratorTool implements OpalTool {
       description += 'provides professional-grade quality. ';
     }
     
-    // Build feature highlights from first few meaningful attributes
-    const meaningfulAttrs = attrList.filter(a => 
-      !a.key.includes('cs_') && 
-      a.value.toLowerCase() !== 'yes' && 
-      a.value.toLowerCase() !== 'no'
-    ).slice(0, 3);
+    // Build feature highlights from meaningful attributes with context
+    // Prioritize attributes with key information (capacity, cartridge type, etc.)
+    const priorityKeys = ['capacity', 'cartridge type', 'weight', 'dimensions', 'material'];
+    const meaningfulAttrs = attrList
+      .filter(a => 
+        !a.key.includes('cs_') && 
+        a.key !== 'brand' &&
+        a.key !== 'cordless / corded' &&
+        a.value.toLowerCase() !== 'yes' && 
+        a.value.toLowerCase() !== 'no' &&
+        a.value.length > 2
+      )
+      .sort((a, b) => {
+        const aIsPriority = priorityKeys.some(k => a.key.includes(k));
+        const bIsPriority = priorityKeys.some(k => b.key.includes(k));
+        if (aIsPriority && !bIsPriority) return -1;
+        if (!aIsPriority && bIsPriority) return 1;
+        return 0;
+      })
+      .slice(0, 3);
     
     if (meaningfulAttrs.length > 0) {
-      const features = meaningfulAttrs.map(a => a.value).join(', ');
+      const features = meaningfulAttrs.map(a => {
+        // For better readability, include key for context if value doesn't already contain it
+        if (a.value.length < 15 && !a.value.toLowerCase().includes(a.key.split(' ')[0])) {
+          return `${a.key}: ${a.value}`;
+        }
+        return a.value;
+      }).join(', ');
       description += `Features include ${features}. `;
     }
     
