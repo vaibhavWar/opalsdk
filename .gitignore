@@ -65,3 +65,9 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Deployment artifacts
+publish/
+*.zip
+*.msi
+AzureCLI.msi
+
