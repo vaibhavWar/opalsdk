@@ -14,7 +14,7 @@ public class DescriptionGenerationService : IDescriptionGenerationService
         var description = "this is a test description";
         //BuildDescription(productName, partNumber, attrMap, attrList, type, tone);
         
-        //return description;
+        return description;
     }
 
     private static (Dictionary<string, string> attrMap, List<(string key, string value, string original)> attrList) 
