@@ -9,10 +9,10 @@ Write-Host ""
 # Configuration
 $ResourceGroup = "opal-tools-rg"
 $Location = "eastus"
-$AppServicePlan = "opal-tools-plan-win"
+$AppServicePlan = "ASP-opaltoolsrg-b43a"
 $Sku = "B1"
 $random = Get-Random -Minimum 1000 -Maximum 9999
-$webAppName = "product-desc-gen-$random"
+$webAppName = "product-desc-gen-vw"
 
 Write-Host "Configuration:" -ForegroundColor Cyan
 Write-Host "  Resource Group: $ResourceGroup"
@@ -119,7 +119,8 @@ if ($LASTEXITCODE -ne 0) {
 # Create ZIP
 Write-Host "  Creating deployment package..." -ForegroundColor Gray
 $publishPath = (Get-Item "./publish").FullName
-$zipPath = Join-Path $publishPath ".." "deploy-windows.zip"
+$parentPath = Split-Path $publishPath -Parent
+$zipPath = Join-Path $parentPath "deploy-windows.zip"
 Compress-Archive -Path "$publishPath\*" -DestinationPath $zipPath -Force
 
 # Deploy ZIP

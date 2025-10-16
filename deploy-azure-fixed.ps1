@@ -136,7 +136,8 @@ if ($LASTEXITCODE -ne 0) {
 # Create ZIP
 Write-Host "  Creating deployment package..." -ForegroundColor Gray
 $publishPath = (Get-Item "./publish").FullName
-$zipPath = Join-Path $publishPath ".." "deploy.zip"
+$parentPath = Split-Path $publishPath -Parent
+$zipPath = Join-Path $parentPath "deploy.zip"
 Compress-Archive -Path "$publishPath\*" -DestinationPath $zipPath -Force
 
 # Deploy ZIP
