@@ -9,10 +9,9 @@ public class DescriptionGenerationService : IDescriptionGenerationService
 
     public string GenerateProductDescription(string productName, string partNumber, List<string> attributes, string type, string tone)
     {
-        //var (attrMap, attrList) = ParseAttributes(attributes);
+        var (attrMap, attrList) = ParseAttributes(attributes);
         
-        var description = "this is a test description";
-        //BuildDescription(productName, partNumber, attrMap, attrList, type, tone);
+        var description = BuildDescription(productName, partNumber, attrMap, attrList, type, tone);
         
         return description;
     }

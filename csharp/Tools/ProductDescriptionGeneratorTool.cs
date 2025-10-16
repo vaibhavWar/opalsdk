@@ -32,14 +32,13 @@ public class ProductDescriptionGeneratorTool
             var tone = string.IsNullOrWhiteSpace(parameters.Tone) ? "professional" : parameters.Tone;
 
             // Generate the description
-            var description = "this is a test description";
-            /*_descriptionService.GenerateProductDescription(
+            var description = _descriptionService.GenerateProductDescription(
                 parameters.ProductName,
                 parameters.PartNumber,
                 parameters.Attributes,
                 type,
                 tone
-            );*/
+            );
 
             // Return result with metadata
             return new
