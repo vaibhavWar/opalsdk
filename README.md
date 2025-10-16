@@ -172,6 +172,25 @@ Or use the test-requests.json with Postman/Insomnia.
 
 ## 🏗️ Deployment
 
+### ☁️ Azure (Recommended)
+
+**One-Command Deployment:**
+```powershell
+.\deploy-azure.ps1
+```
+
+See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for details.
+
+**Manual Options:**
+- 📘 [Complete Azure Deployment Guide](AZURE_DEPLOYMENT_GUIDE.md)
+- 🔄 Automated GitHub Actions deployment
+- 🐳 Container Registry deployment
+
+**Pricing Tiers:**
+- **Free (F1)**: Testing only
+- **Basic (B1)**: ~$13/month - Recommended
+- **Premium (P1V2)**: ~$73/month - Production with auto-scaling
+
 ### Local Development
 ```bash
 dotnet run --project csharp/ProductDescriptionGenerator.csproj
@@ -185,7 +204,7 @@ dotnet publish -c Release -o ./publish
 ### Docker
 ```bash
 docker build -t product-description-generator ./csharp
-docker run -p 5000:5000 product-description-generator
+docker run -p 5000:8080 product-description-generator
 ```
 
 ## 📚 Documentation
